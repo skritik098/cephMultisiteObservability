@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rgw-multisite-monitor"
+version = "0.1.0"
+description = "Ceph RGW multisite replication monitoring with bucket-level sync tracking"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.6"
+dependencies = [
+    "flask>=3.0",
+    "flask-cors>=4.0",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+    "requests-aws4auth>=1.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "flake8"]
+
+[project.scripts]
+rgw-monitor = "rgw_monitor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rgw_monitor = ["dashboard/*.html", "dashboard/*.jsx", "dashboard/*.py"]

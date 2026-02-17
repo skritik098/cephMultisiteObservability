@@ -376,11 +376,6 @@ rgw-multisite-monitor/
 │   ├── RGWMultisiteMonitor.jsx    # React dashboard source
 │   ├── build_html.py              # JSX → self-contained HTML builder
 │   └── index.html                 # Built dashboard (generated)
-├── deploy/
-│   ├── docker-compose.yml         # API + Prometheus + Grafana
-│   ├── Containerfile
-│   ├── prometheus.yml
-│   └── grafana-datasource.yml
 └── docs/
     └── MULTISITE_LAB_SETUP.md     # Lab setup guide
 ```
