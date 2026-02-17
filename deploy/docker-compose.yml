@@ -1,0 +1,73 @@
+version: "3.8"
+
+# =====================================================
+# Ceph RGW Multisite Monitor — Docker Compose
+# =====================================================
+# Usage:
+#   1. Edit ../config.yaml with your RGW primary endpoint + credentials
+#   2. docker compose up -d
+#   3. Open http://localhost:3000 (dashboard) or http://localhost:5000 (API)
+#
+# Or configure via the dashboard UI at first launch.
+# =====================================================
+
+services:
+  # ---- Backend: API Server + Collector ----
+  monitor-api:
+    build:
+      context: ..
+      dockerfile: deploy/Containerfile
+    container_name: rgw-multisite-monitor-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../config.yaml:/app/config.yaml
+      - /etc/ceph:/etc/ceph:ro
+      - monitor-data:/app/data
+    environment:
+      - RGW_MONITOR_CONFIG=/app/config.yaml
+      - RGW_MONITOR_PORT=5000
+      - RGW_MONITOR_HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- Prometheus (optional — for alerting & long-term storage) ----
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rgw-monitor-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    depends_on:
+      - monitor-api
+
+  # ---- Grafana (optional — for additional visualization) ----
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rgw-monitor-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  monitor-data:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,40 @@
+# =====================================================
+# Ceph RGW Multisite Monitor — Configuration
+# =====================================================
+# This tool uses radosgw-admin CLI on the local host.
+# It MUST run on a Ceph admin/mon node with cluster access.
+#
+# NO configuration is required for basic operation.
+# The tool will auto-discover everything from the cluster.
+#
+# The options below are all OPTIONAL.
+# =====================================================
+
+# --- Collection interval (seconds) ---
+# How often to collect sync data from all zones.
+collection_interval: 60
+
+# --- Optional: REST API for bucket stats ---
+# By default, bucket stats are fetched via radosgw-admin CLI.
+# Set this to true to query secondary zone RGW endpoints directly
+# via the Admin REST API for their bucket stats. This can be useful
+# when the CLI --rgw-zone flag doesn't return remote zone stats
+# (depends on cluster configuration).
+#
+# When enabled, access_key and secret_key are required.
+use_rest_for_bucket_stats: true
+
+# --- RGW Admin credentials (only needed if use_rest_for_bucket_stats: true) ---
+# Create with:
+#   radosgw-admin user create --uid=rgw-monitor \
+#     --display-name="RGW Monitor" \
+#     --caps="buckets=read;metadata=read;usage=read;zone=read"
+access_key: "xxxxxx"
+secret_key: "xxxxxxx"
+
+# --- SSL verification (for REST API calls) ---
+verify_ssl: false
+
+# --- API server bind settings ---
+api_host: "0.0.0.0"
+api_port: 5500
