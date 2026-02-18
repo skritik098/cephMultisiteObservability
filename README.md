@@ -2,6 +2,12 @@
 
 A monitoring solution for Ceph RGW multisite replication — providing **granular bucket-level sync tracking**, **per-bucket error analysis**, **shard-level sync visibility from secondary zones**, and a **consolidated dashboard**.
 
+> **[Executive Summary](executive_summary.md)** · **[Dashboard Screenshots](screenshots/)** · **[pip Install Package](binary/)**
+
+| Overview Tab | Bucket Sync Tab |
+|---|---|
+| ![Overview](screenshots/Screenshot-2026-02-18-at-6.06.10-PM.png) | ![Bucket Sync](screenshots/Screenshot-2026-02-18-at-6.06.33-PM.png) |
+
 ## Problem
 
 In Ceph RGW multisite deployments, monitoring replication health is painful:
@@ -80,7 +86,20 @@ The zone agent solves this by running locally on the secondary and pushing **pro
 
 ## Quick Start
 
-### Step 1: Start the primary dashboard
+### Option A: pip install (recommended)
+
+Install the pre-built package from [`binary/`](binary/) — see the [binary README](binary/README.md) for full CLI reference.
+
+```bash
+pip install binary/rgw_multisite_monitor-0.1.0-py3-none-any.whl
+
+rgw-monitor init       # validate cluster access, generate config
+rgw-monitor start      # launch dashboard on :5000
+```
+
+### Option B: Run from source
+
+#### Step 1: Start the primary dashboard
 
 On the **master zone** admin/mon node:
 
@@ -98,7 +117,7 @@ curl http://localhost:5000/api/health
 
 Open the dashboard at `http://<primary-node>:5000`
 
-### Step 2: Deploy the zone agent on secondary
+#### Step 2: Deploy the zone agent on secondary
 
 Copy **only** `backend/zone_agent.py` to the secondary zone node. No other files needed.
 
@@ -115,7 +134,9 @@ python3 zone_agent.py --primary-url http://primary-node:5000
 
 That's it. The dashboard will show a green **AGENT** badge on the secondary zone card within 60 seconds.
 
-### Step 3: Verify
+> **pip alternative for the agent:** `rgw-monitor agent -u http://primary-node:5000`
+
+#### Step 3: Verify
 
 On the primary node, check the agent is pushing data:
 ```bash
@@ -362,20 +383,31 @@ This is expected. The primary zone's `sync status` output is mostly empty becaus
 ## File Structure
 
 ```
-rgw-multisite-monitor/
-├── config.yaml                    # Optional primary configuration
-├── setup.sh                       # Quick-start (validates, installs, starts)
-├── README.md
+cephMultisiteObservability/
+├── README.md                          # This file
+├── executive_summary.md               # One-page overview for leadership
+├── multisiteSetup.md                  # Lab setup guide
+├── config.yaml                        # Optional primary configuration
+├── setup.sh                           # Quick-start (validates, installs, starts)
+├── generateLoad.sh                    # Test load generator
+├── adminRGWAPI/
+│   └── api.py                         # Standalone RGW admin REST API helper
 ├── backend/
-│   ├── collector.py               # Primary: CLI-based data collector + data store
-│   ├── api_server.py              # Primary: Flask REST API + zone agent receiver
-│   ├── zone_agent.py              # Secondary: standalone agent (no deps beyond stdlib)
-│   ├── test_steps.py              # Validation test script
+│   ├── collector.py                   # Primary: CLI-based data collector + data store
+│   ├── api_server.py                  # Primary: Flask REST API + zone agent receiver
+│   ├── zone_agent.py                  # Secondary: standalone agent (no deps beyond stdlib)
+│   ├── test_steps.py                  # Validation test script
 │   └── requirements.txt
+├── binary/                            # pip-installable package
+│   ├── README.md                      # Install & CLI reference (rgw-monitor command)
+│   ├── cli.py                         # CLI entry point source
+│   ├── pyproject.toml                 # Python package config
+│   └── rgw_multisite_monitor-*.whl    # Pre-built wheel
 ├── dashboard/
-│   ├── RGWMultisiteMonitor.jsx    # React dashboard source
-│   ├── build_html.py              # JSX → self-contained HTML builder
-│   └── index.html                 # Built dashboard (generated)
-└── docs/
-    └── MULTISITE_LAB_SETUP.md     # Lab setup guide
+│   ├── RGWMultisiteMonitor.jsx        # React dashboard source
+│   ├── build_html.py                  # JSX → self-contained HTML builder
+│   └── index.html                     # Built dashboard (generated)
+└── screenshots/                       # Dashboard screenshots
+    ├── README.md                      # Screenshot gallery
+    └── *.png
 ```
