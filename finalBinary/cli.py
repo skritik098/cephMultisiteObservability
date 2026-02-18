@@ -160,6 +160,22 @@ def _ensure_dashboard_built():
             print(f"  ⚠ Dashboard build failed: {proc.stderr.strip()[:200]}")
 
 
+def _load_yaml_config(config_path):
+    """Load config YAML without importing the server module.
+
+    Returns a dict with config values (empty dict if no config found).
+    Used by CLI to read api_host, api_port etc. before server import.
+    """
+    import yaml
+    if config_path and os.path.isfile(config_path):
+        try:
+            with open(config_path, "r") as f:
+                return yaml.safe_load(f) or {}
+        except Exception:
+            return {}
+    return {}
+
+
 # ------------------------------------------------------------------ #
 #  rgw-monitor start
 # ------------------------------------------------------------------ #
@@ -175,6 +191,9 @@ def cmd_start(args):
         os.environ["RGW_MONITOR_CONFIG"] = config_path
     else:
         print("  Config: (none — using defaults, run 'rgw-monitor init' to generate)")
+
+    # Load config to read api_host/api_port (and any other settings)
+    config = _load_yaml_config(config_path)
 
     _ensure_dashboard_built()
 
@@ -199,8 +218,9 @@ def cmd_start(args):
 
     start_collector_from_config()
 
-    port = args.port or 5000
-    host = args.host or "0.0.0.0"
+    # Priority: CLI args > config file > defaults
+    port = args.port or config.get("api_port", 5000)
+    host = args.host or config.get("api_host", "0.0.0.0")
 
     print()
     print(f"  Dashboard:  http://{host}:{port}")
